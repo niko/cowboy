@@ -528,7 +528,10 @@ body(Req=#http_req{body_state=waiting}, Opts) ->
 					body(Req2#http_req{body_state={stream, 0,
 						fun cow_http_te:stream_chunked/2, {0, 0}, CFun}}, Opts);
 				{ok, [<<"identity">>], Req2} ->
-					{Len, Req3} = body_length(Req2),
+					{Len, Req3} = case lists:keyfind(forced_content_length, 1, Opts) of
+						false -> body_length(Req2);
+						{_, ForcedContentLength} -> {ForcedContentLength, Req2}
+					end,
 					case Len of
 						0 ->
 							{ok, <<>>, Req3#http_req{body_state=done}};
